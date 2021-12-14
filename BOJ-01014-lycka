@@ -1,0 +1,98 @@
+#define GCC_COMPILER (defined(__GNUC__) && !defined(__clang__))
+
+#if GCC_COMPILER
+#include <bits/stdc++.h>
+#endif
+
+//const double pi = 3.1415926535897932;
+using namespace std;
+const int MOD = 1'000'000'009;
+using ll = long long;
+using ull = unsigned long long;
+#define INF ULONG_MAX
+//using INF = LONG_MAX;
+using point = pair<int, int>;
+int mod = 1'000'000'000;
+
+bool can_visit(int h, int w, point here) {
+    if (here.first < 0 || here.second < 0 || here.first >= h || here.second >= w)
+        return false;
+    return true;
+}
+
+vector<point> dirs = {
+    {-1, -1}, {0, -1}, {1, -1}, {-1, 1}, {0, 1}, {1, 1}
+};
+
+bool dfs(vector<vector<int>>& adj, vector<bool>& visited, vector<int>& A, vector<int>& B, int here) {
+    visited[here] = true;
+
+    for (auto there : adj[here]) {
+        if (B[there] == -1 || (!visited[B[there]] && dfs(adj, visited, A, B, B[there]))) {
+            A[here] = there;
+            B[there] = here;
+            return true;
+        }
+    }
+
+    return false;
+}
+int main() {
+
+    ios::sync_with_stdio(false);
+    cin.tie(NULL);
+    //freopen("sample_input.txt", "r", stdin);
+
+    int t; cin >> t;
+    while (t--) {
+        int h, w;
+        cin >> h >> w;
+        vector<vector<int>> board(h, vector<int>(w, -1));
+        int idA = 0, idB = 0;
+        int invalid = 0;
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                char c; cin >> c;
+                if (c == 'x') {
+                    invalid++;
+                    continue;
+                }
+
+                if (x % 2)
+                    board[y][x] = idA++;
+                else
+                    board[y][x] = idB++;
+            }
+        }
+        vector<int> A(idA, -1), B(idB, -1);
+        vector<vector<int>> adj(A.size());
+
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                if (board[y][x] == -1)
+                    continue;
+
+                if (x % 2) {
+                    for (auto [dy, dx] : dirs) {
+                        point there = { y + dy, x + dx };
+                        if (!can_visit(h, w, there) || board[there.first][there.second] == -1)
+                            continue;
+                        adj[board[y][x]].push_back(board[there.first][there.second]);
+                    }
+                }
+            }
+        }
+
+        int ans = 0;
+
+        for (int i = 0; i < adj.size(); i++) {
+            vector<bool> visited(adj.size());
+            if (dfs(adj, visited, A, B, i)) {
+                ans++;
+            }
+        }
+
+        cout << h * w - ans - invalid << '\n';
+    }
+    return 0;
+}
